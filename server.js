@@ -10,9 +10,27 @@ const adminRoutes = require('./routes/admin');
 
 const PORT = process.env.PORT || 5000;
 const MONGO = process.env.MONGO_URI || 'mongodb://localhost:27017/taskmanager';
+const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')       
+  .map(s => s.trim());
 
+const corsOptions = {
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (CLIENT_URLS.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS: ' + origin));
+    }
+  },
+  credentials: true,
+  exposedHeaders: ['Authorization', 'Content-Type'],
+  methods: ['GET','POST','PUT','DELETE','OPTIONS']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
-app.use(cors({ origin: process.env.CLIENT_URL || 'https://task-tab.netlify.app/' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
